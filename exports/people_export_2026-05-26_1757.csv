@@ -1,0 +1,6 @@
+﻿id,first_name,second_name,third_name,fourth_name,family_name,tribe_name,gender,nationality,status,category,tags
+1,Salim,Yousif,Abdalla,,Almulla,Al-ali,,,,,
+2,Yousif,Abdalla,,,Almulla,,Male,UAE,Alive,Government Figure,
+3,Moahmmed,Rashid,,,Alabbar,Alfalasi,Male,UAE,Alive,Business Figure,
+4,Test,Person,,,,,,,Unknown,Other,
+5,Test,Organization,,,,,,,Unknown,Other,

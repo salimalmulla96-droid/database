@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Edit {{ organization.display_name }} | Smart Database{% endblock %}
+{% block content %}
+  <section class="page-header">
+    <div>
+      <p class="eyebrow" data-i18n="edit">Edit</p>
+      <h1><i class="fa-solid fa-pen-to-square"></i> <span data-i18n="edit_organization">Edit Organization</span></h1>
+    </div>
+  </section>
+
+  <form class="form-panel" action="/organizations/{{ organization.id }}/edit" method="post" enctype="multipart/form-data">
+    <section class="form-section photo-section">
+      <h2><i class="fa-solid fa-image"></i> <span data-i18n="logo_image">Logo/Image</span></h2>
+      <div class="upload-preview">
+        {% if organization.image_path %}<img class="profile-image" src="{{ organization.image_path }}" alt="" data-image-preview>{% else %}<span class="profile-image fallback" data-image-fallback>O</span><img class="profile-image hidden" alt="" data-image-preview>{% endif %}
+        <label><span data-i18n="organization_image">Organization Logo/Image</span><input type="file" name="image" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" data-preview-input></label>
+      </div>
+    </section>
+    <section class="form-section">
+      <h2 data-i18n="basic_information">Basic Information</h2>
+      <div class="form-grid">
+        <label><span data-i18n="name">Name</span><input name="name" value="{{ organization.name or '' }}" required></label>
+        <label><span data-i18n="alternative_name">Alternative Name</span><input name="alternative_name" value="{{ organization.alternative_name or '' }}"></label>
+        <label><span data-i18n="organization_type">Organization Type</span><select name="organization_type">{% if organization.organization_type and organization.organization_type not in organization_types %}<option value="{{ organization.organization_type }}" data-option-label="{{ organization.organization_type }}" selected>{{ organization.organization_type }}</option>{% endif %}{% for item in organization_types %}<option value="{{ item }}" data-option-label="{{ item }}" {{ 'selected' if organization.organization_type == item else '' }}>{{ item }}</option>{% endfor %}</select></label>
+        <label><span data-i18n="status">Status</span><select name="status">{% if organization.status and organization.status not in organization_statuses %}<option value="{{ organization.status }}" data-option-label="{{ organization.status }}" selected>{{ organization.status }}</option>{% endif %}{% for item in organization_statuses %}<option value="{{ item }}" data-option-label="{{ item }}" {{ 'selected' if organization.status == item else '' }}>{{ item }}</option>{% endfor %}</select></label>
+        <label><span data-i18n="emirate">Emirate</span><select name="emirate">{% if organization.emirate and organization.emirate not in emirates %}<option value="{{ organization.emirate }}" data-option-label="{{ organization.emirate }}" selected>{{ organization.emirate }}</option>{% endif %}{% for item in emirates %}<option value="{{ item }}" data-option-label="{{ item }}" {{ 'selected' if organization.emirate == item else '' }}>{{ item }}</option>{% endfor %}</select></label>
+      </div>
+    </section>
+    <section class="form-section">
+      <h2 data-i18n="history_location">History and Location</h2>
+      <div class="form-grid">
+        <label><span data-i18n="founded_year">Founded Year</span><input type="number" name="founded_year" value="{{ organization.founded_year or '' }}"></label>
+        <label><span data-i18n="founder">Founder</span><input name="founder" value="{{ organization.founder or '' }}"></label>
+        <label><span data-i18n="headquarters">Headquarters</span><input name="headquarters" value="{{ organization.headquarters or '' }}"></label>
+      </div>
+    </section>
+    <section class="form-section">
+      <h2 data-i18n="description">Description</h2>
+      <label><span data-i18n="description">Description</span><textarea name="description" rows="5">{{ organization.description or '' }}</textarea></label>
+      <label><span data-i18n="tags">Tags</span><input name="tags" value="{{ organization.tags or '' }}" data-i18n-placeholder="organization_tags_placeholder"></label>
+    </section>
+    <div class="actions">
+      <a class="button secondary" href="/organizations/{{ organization.id }}"><i class="fa-solid fa-xmark"></i> <span data-i18n="cancel">Cancel</span></a>
+      <button class="button" type="submit"><i class="fa-solid fa-check"></i> <span data-i18n="save_changes">Save Changes</span></button>
+    </div>
+  </form>
+{% endblock %}

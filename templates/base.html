@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Smart Database{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="/static/style.css">
+  <style>{{ appearance_css | safe }}</style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a class="brand" href="/" data-i18n="brand">Smart Database</a>
+      <button class="language-toggle" type="button" data-language-toggle>
+        <span data-i18n="language_button">Arabic</span>
+      </button>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="{{ 'active' if active_page == 'dashboard' else '' }}" href="/"><i class="fa-solid fa-table-cells-large"></i> <span data-i18n="nav_dashboard">Dashboard</span></a>
+      <a class="{{ 'active' if active_page == 'people' else '' }}" href="/people"><i class="fa-solid fa-users"></i> <span data-i18n="nav_people">People</span></a>
+      <a class="{{ 'active' if active_page == 'add_person' else '' }}" href="/people/add"><i class="fa-solid fa-user-plus"></i> <span data-i18n="nav_add_person">Add Person</span></a>
+      <a class="{{ 'active' if active_page == 'organizations' else '' }}" href="/organizations"><i class="fa-solid fa-building"></i> <span data-i18n="nav_organizations">Organizations</span></a>
+      <a class="{{ 'active' if active_page == 'add_organization' else '' }}" href="/organizations/add"><i class="fa-solid fa-square-plus"></i> <span data-i18n="nav_add_organization">Add Organization</span></a>
+      <a class="{{ 'active' if active_page == 'search' else '' }}" href="/search"><i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="nav_search">Search</span></a>
+      <a class="{{ 'active' if active_page == 'smart_add' else '' }}" href="/smart-add"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="nav_smart_add">Smart Add</span></a>
+      <a class="{{ 'active' if active_page == 'smart_import' else '' }}" href="/smart-import"><i class="fa-solid fa-upload"></i> <span data-i18n="nav_smart_import">Smart Import</span></a>
+      <a class="{{ 'active' if active_page == 'review' else '' }}" href="/review"><i class="fa-solid fa-list-check"></i> <span data-i18n="nav_review">Review Queue</span></a>
+      <a class="{{ 'active' if active_page == 'duplicates' else '' }}" href="/duplicates"><i class="fa-solid fa-copy"></i> <span data-i18n="nav_duplicates">Duplicate Center</span></a>
+      <a class="{{ 'active' if active_page == 'export' else '' }}" href="/export"><i class="fa-solid fa-file-export"></i> <span data-i18n="nav_export">Export Center</span></a>
+      <a class="{{ 'active' if active_page == 'backup' else '' }}" href="/backup"><i class="fa-solid fa-shield-halved"></i> <span data-i18n="nav_backup">Backup Center</span></a>
+      <a class="{{ 'active' if active_page == 'settings' else '' }}" href="/settings"><i class="fa-solid fa-gear"></i> <span data-i18n="nav_settings">Settings</span></a>
+    </nav>
+    <div class="sidebar-footer"></div>
+  </aside>
+
+  <main class="main">
+    {% block content %}{% endblock %}
+  </main>
+  <div class="modal confirm-modal" id="confirm-delete-modal" aria-hidden="true">
+    <div class="modal-dialog confirm-dialog">
+      <h2><i class="fa-solid fa-triangle-exclamation"></i> <span data-i18n="confirm_delete">Confirm Delete</span></h2>
+      <p data-confirm-modal-message></p>
+      <div class="actions">
+        <button class="button secondary" type="button" data-confirm-cancel data-i18n="cancel">Cancel</button>
+        <button class="button danger-button" type="button" data-confirm-accept data-i18n="delete">Delete</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    window.settingOptionLabels = {{ setting_labels | default({"en": {}, "ar": {}}) | tojson }};
+    window.settingOptionLists = {{ setting_option_lists | default({}) | tojson }};
+  </script>
+  <script src="/static/app.js"></script>
+</body>
+</html>

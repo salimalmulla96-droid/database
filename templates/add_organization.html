@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Add Organization | Smart Database{% endblock %}
+{% block content %}
+  <section class="page-header">
+    <div>
+      <p class="eyebrow" data-i18n="new_record">New record</p>
+      <h1 data-i18n="add_organization">Add Organization</h1>
+    </div>
+  </section>
+
+  <form class="form-panel" action="/organizations/add" method="post" enctype="multipart/form-data">
+    <section class="form-section photo-section">
+      <div>
+        <h2 data-i18n="logo_image">Logo/Image</h2>
+        <p class="section-hint" data-i18n="logo_hint">Upload a logo or keep the default organization icon.</p>
+      </div>
+      <div class="upload-preview">
+        <span class="profile-image fallback" data-image-fallback>O</span>
+        <img class="profile-image hidden" alt="" data-image-preview>
+        <label><span data-i18n="organization_image">Organization Logo/Image</span><input type="file" name="image" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" data-preview-input></label>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h2 data-i18n="basic_information">Basic Information</h2>
+      <div class="form-grid">
+        <label><span data-i18n="name">Name</span><input name="name" required></label>
+        <label><span data-i18n="alternative_name">Alternative Name</span><input name="alternative_name"></label>
+        <label><span data-i18n="organization_type">Organization Type</span><select name="organization_type">{% for item in organization_types %}<option value="{{ item }}" data-option-label="{{ item }}">{{ item }}</option>{% endfor %}</select></label>
+        <label><span data-i18n="status">Status</span><select name="status">{% for item in organization_statuses %}<option value="{{ item }}" data-option-label="{{ item }}">{{ item }}</option>{% endfor %}</select></label>
+        <label><span data-i18n="emirate">Emirate</span><select name="emirate">{% for item in emirates %}<option value="{{ item }}" data-option-label="{{ item }}">{{ item }}</option>{% endfor %}</select></label>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h2 data-i18n="history_location">History and Location</h2>
+      <div class="form-grid">
+        <label><span data-i18n="founded_year">Founded Year</span><input type="number" name="founded_year" min="1800" max="2100"></label>
+        <label><span data-i18n="founder">Founder</span><input name="founder"></label>
+        <label><span data-i18n="headquarters">Headquarters</span><input name="headquarters"></label>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h2 data-i18n="description_notes">Description and Notes</h2>
+      <label><span data-i18n="description">Description</span><textarea name="description" rows="5"></textarea></label>
+      <label><span data-i18n="tags">Tags</span><input name="tags" data-i18n-placeholder="organization_tags_placeholder"></label>
+    </section>
+
+    <div class="actions">
+      <a class="button secondary" href="/organizations" data-i18n="cancel">Cancel</a>
+      <button class="button" type="submit" data-i18n="save_organization">Save Organization</button>
+    </div>
+  </form>
+{% endblock %}

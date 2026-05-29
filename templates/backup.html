@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Backup Center | Smart Database{% endblock %}
+{% block content %}
+  <section class="page-header">
+    <div>
+      <p class="eyebrow"><i class="fa-solid fa-shield-halved"></i> <span data-i18n="backup_center">Backup Center</span></p>
+      <h1 data-i18n="backup_center">Backup Center</h1>
+    </div>
+    <form action="/backup/create" method="post"><button class="button" type="submit"><i class="fa-solid fa-database"></i> <span data-i18n="create_backup">Create Full Backup Now</span></button></form>
+  </section>
+
+  <section class="content-grid">
+    <article class="panel">
+      <h2><i class="fa-solid fa-box-archive"></i> <span data-i18n="existing_backups">Existing Backups</span></h2>
+      <div class="list">
+        {% for backup in backups %}
+          <div class="list-item">
+            <div><strong>{{ backup.name }}</strong><span>{{ (backup.stat().st_size / 1024)|round(1) }} KB</span></div>
+            <div class="actions">
+              <a class="button secondary" href="/backup/download/{{ backup.name }}"><i class="fa-solid fa-download"></i> <span data-i18n="download">Download</span></a>
+              <form action="/backup/delete/{{ backup.name }}" method="post" data-confirm-delete><button class="text-danger" type="submit"><i class="fa-solid fa-trash"></i> <span data-i18n="delete">Delete</span></button></form>
+            </div>
+          </div>
+        {% else %}<p class="empty" data-i18n="no_backups">No backups yet.</p>{% endfor %}
+      </div>
+    </article>
+    <article class="panel danger-panel">
+      <h2><i class="fa-solid fa-triangle-exclamation"></i> <span data-i18n="restore_placeholder">Restore Placeholder</span></h2>
+      <p data-i18n="restore_warning">Restoring will replace current data. Create a backup before restoring.</p>
+      <form action="/backup/restore-placeholder" method="post"><button class="button secondary" type="submit" disabled><i class="fa-solid fa-upload"></i> Restore</button></form>
+    </article>
+  </section>
+{% endblock %}

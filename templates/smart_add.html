@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Smart Add | Smart Database{% endblock %}
+{% block content %}
+  <section class="page-header">
+    <div>
+      <p class="eyebrow"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="smart_intake">Smart Information Intake</span></p>
+      <h1 data-i18n="smart_add">Smart Add</h1>
+    </div>
+    <a class="button secondary" href="/review"><i class="fa-solid fa-list-check"></i> <span data-i18n="review_queue">Review Queue</span></a>
+  </section>
+
+  <form class="intake-shell" action="/smart-add/analyze" method="post">
+    <section class="panel intake-main">
+      <div class="step-row"><span>1</span><strong data-i18n="what_are_you_adding">What are you adding?</strong></div>
+      <div class="choice-grid">
+        {% for item in ["One Person", "One Organization", "Mixed Information", "Note Only", "Career / Position Only", "Education Only", "Relationship Only"] %}
+          {% set icon = "fa-user" if item == "One Person" else ("fa-building" if item == "One Organization" else ("fa-layer-group" if item == "Mixed Information" else ("fa-note-sticky" if item == "Note Only" else ("fa-briefcase" if "Career" in item else ("fa-graduation-cap" if "Education" in item else "fa-link"))))) %}
+          <label class="choice-card">
+            <input type="radio" name="input_type" value="{{ item }}" {{ 'checked' if loop.first else '' }}>
+            <span><i class="fa-solid {{ icon }}"></i> <span data-value-label="{{ item }}">{{ item }}</span></span>
+          </label>
+        {% endfor %}
+      </div>
+      <div class="step-row"><span>2</span><strong data-i18n="paste_information">Paste information</strong></div>
+      <p class="section-hint" data-i18n="smart_add_hint">Paste messy notes, biography text, source snippets, or mixed profile information. Nothing is saved to profiles until review.</p>
+      <textarea name="raw_text" rows="14" required data-i18n-placeholder="paste_information"></textarea>
+      <div class="actions">
+        <button class="button secondary" type="reset"><i class="fa-solid fa-eraser"></i> <span data-i18n="clear">Clear</span></button>
+        <button class="button" type="submit"><i class="fa-solid fa-magnifying-glass-chart"></i> <span data-i18n="analyze_information">Analyze Information</span></button>
+      </div>
+    </section>
+
+    <aside class="panel intake-side">
+      <div class="step-row"><span>3</span><strong data-i18n="classify_source">Classify source</strong></div>
+      <label><span data-i18n="source_type">Source Type</span><select name="source_type">{% for item in intake_source_types %}<option value="{{ item }}" data-option-label="{{ item }}">{{ item }}</option>{% endfor %}</select></label>
+      <label><span data-i18n="source_title">Source Title</span><input name="source_title"></label>
+      <label><span data-i18n="source_url">Source URL</span><input name="source_url" type="url"></label>
+      <label><span data-i18n="confidence">Confidence</span><select name="confidence">{% for item in confidence_options %}<option value="{{ item }}" data-option-label="{{ item }}">{{ item }}</option>{% endfor %}</select></label>
+      <label><span data-i18n="privacy_level">Privacy</span><select name="privacy_level">{% for item in privacy_options %}<option value="{{ item }}" data-option-label="{{ item }}">{{ item }}</option>{% endfor %}</select></label>
+      <div class="warning-box"><i class="fa-solid fa-shield-halved"></i> <span data-i18n="review_safety">Extracted information always goes to Review Queue first.</span></div>
+    </aside>
+  </form>
+{% endblock %}

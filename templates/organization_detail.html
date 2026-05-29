@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}{{ organization.display_name }} | Smart Database{% endblock %}
+{% block content %}
+  <section class="profile-header">
+    {% if organization.image_path %}<img class="profile-image" src="{{ organization.image_path }}" alt="">{% else %}<span class="profile-image fallback">O</span>{% endif %}
+    <div>
+      <p class="eyebrow"><i class="fa-solid fa-building"></i> <span data-i18n="organization_profile">Organization profile</span></p>
+      <h1>{{ organization.display_name }}</h1>
+      <div class="meta-row">
+        <span data-value-label="{{ organization.organization_type }}">{{ organization.organization_type or "Type unknown" }}</span>
+        <span data-value-label="{{ organization.status }}">{{ organization.status or "Status unknown" }}</span>
+        <span data-value-label="{{ organization.emirate }}">{{ organization.emirate or "Location unknown" }}</span>
+      </div>
+    </div>
+    <div class="profile-actions">
+      <button class="button" type="button" data-modal-open="note-modal"><i class="fa-solid fa-note-sticky"></i> <span data-i18n="add_note">Add Note</span></button>
+      <button class="button" type="button" data-modal-open="relationship-modal"><i class="fa-solid fa-link"></i> <span data-i18n="add_relationship">Add Relationship</span></button>
+      <button class="button" type="button" data-modal-open="position-modal"><i class="fa-solid fa-briefcase"></i> <span data-i18n="add_person_position">Add Person / Position Link</span></button>
+      <a class="button secondary" href="/organizations/{{ organization.id }}/edit"><i class="fa-solid fa-pen-to-square"></i> <span data-i18n="edit_organization">Edit Organization</span></a>
+      <form method="post" action="/organizations/{{ organization.id }}/delete" class="delete-form" onsubmit="return confirmOrganizationDelete(event)"><button class="button secondary danger-button" type="submit"><i class="fa-solid fa-trash"></i> <span data-i18n="delete_organization">Delete Organization</span></button></form>
+      <a class="button secondary" href="/organizations"><i class="fa-solid fa-arrow-left"></i> <span data-i18n="back">Back</span></a>
+    </div>
+  </section>
+
+  <section class="detail-grid">
+    <article class="panel">
+      <h2><i class="fa-solid fa-align-left"></i> <span data-i18n="description">Description</span></h2>
+      <p class="long-text">{{ organization.description or "No description added." }}</p>
+    </article>
+
+    <article class="panel">
+      <h2><i class="fa-solid fa-landmark"></i> <span data-i18n="history">History</span></h2>
+      <dl class="details">
+        <div><dt data-i18n="name">Name</dt><dd>{{ organization.name or "-" }}</dd></div>
+        <div><dt data-i18n="alternative_name">Alternative Name</dt><dd>{{ organization.alternative_name or "-" }}</dd></div>
+        <div><dt data-i18n="organization_type">Type</dt><dd data-value-label="{{ organization.organization_type }}">{{ organization.organization_type or "-" }}</dd></div>
+        <div><dt data-i18n="status">Status</dt><dd data-value-label="{{ organization.status }}">{{ organization.status or "-" }}</dd></div>
+        <div><dt data-i18n="emirate">Emirate</dt><dd data-value-label="{{ organization.emirate }}">{{ organization.emirate or "-" }}</dd></div>
+        <div><dt data-i18n="founded_year">Founded Year</dt><dd>{{ organization.founded_year or "-" }}</dd></div>
+        <div><dt data-i18n="founder">Founder</dt><dd>{{ organization.founder or "-" }}</dd></div>
+        <div><dt data-i18n="headquarters">Headquarters</dt><dd>{{ organization.headquarters or "-" }}</dd></div>
+      </dl>
+    </article>
+
+    <article class="panel">
+      <h2><i class="fa-solid fa-check"></i> <span data-i18n="current_people">Current People</span></h2>
+      {% if current_positions %}
+        <div class="timeline">{% for position in current_positions %}<a class="timeline-item" href="/people/{{ position.person.id }}"><strong>{{ position.person.display_name }}</strong><span>{{ position.position_title }} - {{ position.start_year or "?" }} to <span data-i18n="present">Present</span></span></a>{% endfor %}</div>
+      {% else %}<p class="empty" data-i18n="no_current_people">No current people added.</p>{% endif %}
+    </article>
+
+    <article class="panel">
+      <h2><i class="fa-solid fa-briefcase"></i> <span data-i18n="previous_people">Previous People</span></h2>
+      {% if previous_positions %}
+        <div class="timeline">{% for position in previous_positions %}<a class="timeline-item" href="/people/{{ position.person.id }}"><strong>{{ position.person.display_name }}</strong><span>{{ position.position_title }} - {{ position.start_year or "?" }} to {{ position.end_year or "?" }}</span></a>{% endfor %}</div>
+      {% else %}<p class="empty" data-i18n="no_previous_people">No previous people added.</p>{% endif %}
+    </article>
+
+    <article class="panel full-span">
+      <h2><i class="fa-solid fa-clock"></i> <span data-i18n="position_timeline">Position Timeline</span></h2>
+      {% if positions %}
+        <div class="timeline">{% for position in positions %}<a class="timeline-item" href="/people/{{ position.person.id }}"><strong>{{ position.position_title }}</strong><span>{{ position.person.display_name }} - {{ position.start_year or "?" }} to {% if position.is_current %}<span data-i18n="present">Present</span>{% else %}{{ position.end_year or "?" }}{% endif %}</span>{% if position.notes %}<em>{{ position.notes }}</em>{% endif %}</a>{% endfor %}</div>
+      {% else %}<p class="empty" data-i18n="no_position_history">No position history added.</p>{% endif %}
+    </article>
+
+    <article class="panel full-span">
+      <h2><i class="fa-solid fa-network-wired"></i> <span data-i18n="organization_relationships">Organization Relationships</span></h2>
+      {% if organization_relationships %}
+        <div class="cards-grid">
+          {% for item in organization_relationships %}
+            <article class="record-card compact-card">
+              <h2><a href="/organizations/{{ item.organization.id }}">{{ item.organization.display_name }}</a></h2>
+              <div class="meta-row"><span data-value-label="{{ item.type }}">{{ item.type }}</span></div>
+              {% if item.notes %}<p>{{ item.notes }}</p>{% endif %}
+              <form action="/organization-relationships/{{ item.id }}/delete" method="post"><input type="hidden" name="return_to" value="/organizations/{{ organization.id }}"><button class="text-danger" type="submit"><i class="fa-solid fa-trash"></i> <span data-i18n="delete">Delete</span></button></form>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}<p class="empty" data-i18n="no_organization_relationships">No organization relationships added.</p>{% endif %}
+    </article>
+
+    <article class="panel full-span">
+      <h2><i class="fa-solid fa-note-sticky"></i> <span data-i18n="smart_notes">Smart Notes</span></h2>
+      {% if notes %}
+        <div class="notes-grid">
+          {% for note_type, items in notes.items() %}
+            <section>
+              <h3><i class="fa-solid fa-note-sticky"></i> <span data-value-label="{{ note_type }}">{{ note_type }}</span></h3>
+              {% for note in items %}
+                <article class="note-card">
+                  <div class="note-head"><strong>{{ note.title or note.note_type }}</strong>{% if note.is_private %}<span class="badge"><i class="fa-solid fa-lock"></i> <span data-i18n="private">Private</span></span>{% endif %}</div>
+                  <p class="long-text">{{ note.content }}</p>
+                  <div class="note-meta">{% if note.date_text %}<span><i class="fa-regular fa-calendar"></i> {{ note.date_text }}</span>{% endif %}</div>
+                  {% if note.sources %}
+                    <div class="sources-list">
+                      {% for source in note.sources %}
+                        <div class="source-item">
+                          <strong><i class="fa-solid fa-paperclip"></i> <span data-value-label="{{ source.source_type }}">{{ source.source_type }}</span>: {{ source.title or "" }}</strong>
+                          {% if source.url %}<a href="{{ source.url }}" target="_blank" rel="noopener">{{ source.url }}</a>{% endif %}
+                          {% if source.file_path %}
+                            {% if source.source_type in ["Image", "Screenshot"] %}<img class="source-thumb" src="{{ source.file_path }}" alt="">{% endif %}
+                            <a href="{{ source.file_path }}" target="_blank" rel="noopener">{{ source.file_path.split('/')[-1] }}</a>
+                          {% endif %}
+                          {% if source.text_reference %}<p>{{ source.text_reference }}</p>{% endif %}
+                          {% if source.notes %}<span>{{ source.notes }}</span>{% endif %}
+                          <form action="/sources/{{ source.id }}/delete" method="post"><input type="hidden" name="return_to" value="/organizations/{{ organization.id }}"><button class="text-danger" type="submit"><i class="fa-solid fa-trash"></i></button></form>
+                        </div>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  <form action="/notes/{{ note.id }}/delete" method="post"><input type="hidden" name="return_to" value="/organizations/{{ organization.id }}"><button class="text-danger" type="submit"><i class="fa-solid fa-trash"></i> <span data-i18n="delete">Delete</span></button></form>
+                </article>
+              {% endfor %}
+            </section>
+          {% endfor %}
+        </div>
+      {% else %}<p class="empty" data-i18n="no_notes">No notes added yet.</p>{% endif %}
+    </article>
+
+    <article class="panel">
+      <h2><i class="fa-solid fa-tags"></i> <span data-i18n="tags">Tags</span></h2>
+      <p class="long-text">{{ organization.tags or "No tags added." }}</p>
+    </article>
+  </section>
+
+  <div class="modal" id="note-modal" aria-hidden="true">
+    <div class="modal-dialog">
+      <button class="modal-close" type="button" data-modal-close>&times;</button>
+      <h2><i class="fa-solid fa-note-sticky"></i> <span data-i18n="add_note">Add Note</span></h2>
+      <form class="modal-form" action="/organizations/{{ organization.id }}/notes/add" method="post" enctype="multipart/form-data">
+        <label><span data-i18n="note_type">Note Type</span><select name="note_type">{% for item in note_types %}<option value="{{ item }}" data-option-label="{{ item }}">{{ item }}</option>{% endfor %}</select></label>
+        <label><span data-i18n="title">Title</span><input name="title"></label>
+        <label class="full-span"><span data-i18n="content">Content</span><textarea name="content" rows="5" required></textarea></label>
+        <label><span data-i18n="date_text">Date / Year</span><input name="date_text"></label>
+        <label class="checkbox"><input type="checkbox" name="is_private" value="yes"><span data-i18n="private_note">Private note</span></label>
+        <div class="source-builder full-span" data-source-builder>
+          <h3><i class="fa-solid fa-paperclip"></i> <span data-i18n="sources">Sources</span></h3>
+          <div data-source-list></div>
+          <button class="button secondary" type="button" data-add-source><i class="fa-solid fa-plus"></i> <span data-i18n="add_source">Add Source</span></button>
+        </div>
+        <div class="actions full-span"><button class="button secondary" type="button" data-modal-close data-i18n="cancel">Cancel</button><button class="button" type="submit"><i class="fa-solid fa-check"></i> <span data-i18n="save_note">Save Note</span></button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="relationship-modal" aria-hidden="true">
+    <div class="modal-dialog">
+      <button class="modal-close" type="button" data-modal-close>&times;</button>
+      <h2><i class="fa-solid fa-link"></i> <span data-i18n="add_relationship">Add Relationship</span></h2>
+      <div class="segmented">
+        <button type="button" class="active" data-modal-choice="organization-link" data-i18n="another_organization">Another Organization</button>
+        <button type="button" data-modal-open="position-modal" data-i18n="person_position">Person / Position</button>
+      </div>
+      <form class="modal-form" action="/organizations/{{ organization.id }}/relationships/add" method="post" data-choice-panel="organization-link">
+        <label><span data-i18n="from_organization">From Organization</span><select disabled><option>{{ organization.display_name }}</option></select></label>
+        <label><span data-i18n="to_organization">To Organization</span><select name="to_organization_id">{% for item in organizations if item.id != organization.id %}<option value="{{ item.id }}">{{ item.display_name }}</option>{% endfor %}</select></label>
+        <label><span data-i18n="relationship_type">Relationship Type</span><select name="relationship_type">{% for item in organization_relationship_types %}<option value="{{ item }}" data-option-label="{{ item }}">{{ item }}</option>{% endfor %}</select></label>
+        <label class="full-span"><span data-i18n="notes">Notes</span><textarea name="notes" rows="3"></textarea></label>
+        <div class="actions full-span"><button class="button secondary" type="button" data-modal-close data-i18n="cancel">Cancel</button><button class="button" type="submit"><i class="fa-solid fa-check"></i> <span data-i18n="save_relationship">Save Relationship</span></button></div>
+      </form>
+      <form class="modal-form hidden" action="/organizations/{{ organization.id }}/positions/add" method="post" data-choice-panel="position-link">
+        <label><span data-i18n="person">Person</span><select name="person_id">{% for person in people %}<option value="{{ person.id }}">{{ person.display_name }}</option>{% endfor %}</select></label>
+        <label><span data-i18n="organization">Organization</span><select disabled><option>{{ organization.display_name }}</option></select></label>
+        <label><span data-i18n="position_title">Position Title</span><input name="position_title" list="position-title-suggestions" required></label>
+        <label><span data-i18n="start_year">Start Year</span><input type="number" name="start_year" min="1800" max="2100"></label>
+        <label><span data-i18n="end_year">End Year</span><input type="number" name="end_year" min="1800" max="2100"></label>
+        <label class="checkbox"><input type="checkbox" name="is_current" value="yes"><span data-i18n="current_role_checkbox">Current role</span></label>
+        <label class="full-span"><span data-i18n="notes">Notes</span><textarea name="notes" rows="3"></textarea></label>
+        <div class="actions full-span"><button class="button secondary" type="button" data-modal-close data-i18n="cancel">Cancel</button><button class="button" type="submit"><i class="fa-solid fa-check"></i> <span data-i18n="save_position">Save Position</span></button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="position-modal" aria-hidden="true">
+    <div class="modal-dialog">
+      <button class="modal-close" type="button" data-modal-close>&times;</button>
+      <h2><i class="fa-solid fa-briefcase"></i> <span data-i18n="add_person_position">Add Person / Position Link</span></h2>
+      <form class="modal-form" action="/organizations/{{ organization.id }}/positions/add" method="post">
+        <label><span data-i18n="person">Person</span><select name="person_id">{% for person in people %}<option value="{{ person.id }}">{{ person.display_name }}</option>{% endfor %}</select></label>
+        <label><span data-i18n="position_title">Position Title</span><input name="position_title" list="position-title-suggestions" required></label>
+        <label><span data-i18n="department">Department</span><input name="department"></label>
+        <label><span data-i18n="role_type">Role Type</span><select name="role_type">{% for item in role_types %}<option value="{{ item }}" data-option-label="{{ item }}">{{ item }}</option>{% endfor %}</select></label>
+        <label><span data-i18n="start_year">Start Year</span><input type="number" name="start_year"></label>
+        <label><span data-i18n="end_year">End Year</span><input type="number" name="end_year"></label>
+        <label class="checkbox"><input type="checkbox" name="is_current" value="yes"><span data-i18n="current_role_checkbox">Current role</span></label>
+        <label class="full-span"><span data-i18n="notes">Notes</span><textarea name="notes" rows="3"></textarea></label>
+        <div class="actions full-span"><button class="button secondary" type="button" data-modal-close data-i18n="cancel">Cancel</button><button class="button" type="submit"><i class="fa-solid fa-check"></i> <span data-i18n="save_position">Save Position</span></button></div>
+      </form>
+      <datalist id="position-title-suggestions">{% for item in position_title_suggestions %}<option value="{{ item }}"></option>{% endfor %}</datalist>
+    </div>
+  </div>
+{% endblock %}

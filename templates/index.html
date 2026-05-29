@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Dashboard | Smart Database{% endblock %}
+{% block content %}
+  <section class="page-header">
+    <div>
+      <p class="eyebrow" data-i18n="dashboard_eyebrow">Private intelligence database</p>
+      <h1 data-i18n="dashboard">Dashboard</h1>
+    </div>
+    <a class="button" href="/people/add" data-i18n="add_person">Add Person</a>
+  </section>
+
+  <section class="stats-grid">
+    <article class="stat-card"><span><i class="fa-solid fa-users"></i> <span data-i18n="total_people">Total people</span></span><strong>{{ stats.people }}</strong></article>
+    <article class="stat-card"><span><i class="fa-solid fa-building"></i> <span data-i18n="total_organizations">Total organizations</span></span><strong>{{ stats.organizations }}</strong></article>
+    <article class="stat-card"><span><i class="fa-solid fa-link"></i> <span data-i18n="total_relationships">Total relationships</span></span><strong>{{ stats.relationships }}</strong></article>
+    <article class="stat-card"><span><i class="fa-solid fa-briefcase"></i> <span data-i18n="total_positions">Total positions</span></span><strong>{{ stats.positions }}</strong></article>
+    <article class="stat-card"><span><i class="fa-solid fa-note-sticky"></i> <span data-i18n="total_notes">Total notes</span></span><strong>{{ stats.notes }}</strong></article>
+    <article class="stat-card"><span><i class="fa-solid fa-landmark"></i> <span data-i18n="government_figures">Government figures</span></span><strong>{{ stats.government_figures }}</strong></article>
+    <article class="stat-card"><span><i class="fa-solid fa-chart-line"></i> <span data-i18n="business_figures">Business figures</span></span><strong>{{ stats.business_figures }}</strong></article>
+    <article class="stat-card"><span><i class="fa-solid fa-check"></i> <span data-i18n="active_organizations">Active organizations</span></span><strong>{{ stats.active_organizations }}</strong></article>
+  </section>
+
+  <section class="content-grid">
+    <article class="panel">
+      <div class="panel-title">
+        <h2 data-i18n="recent_people">Recently added people</h2>
+        <a href="/people" data-i18n="view_all">View all</a>
+      </div>
+      {% if recent_people %}
+        <div class="list">
+          {% for person in recent_people %}
+            <a class="list-item with-thumb" href="/people/{{ person.id }}">
+              {% if person.image_path %}<img class="thumb" src="{{ person.image_path }}" alt="">{% else %}<span class="thumb fallback">P</span>{% endif %}
+              <strong>{{ person.display_name }}</strong>
+              <span>{{ person.category or "No category" }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="empty" data-i18n="no_people_yet">No people added yet.</p>
+      {% endif %}
+    </article>
+
+    <article class="panel">
+      <div class="panel-title">
+        <h2 data-i18n="recent_organizations">Recently added organizations</h2>
+        <a href="/organizations" data-i18n="view_all">View all</a>
+      </div>
+      {% if recent_organizations %}
+        <div class="list">
+          {% for organization in recent_organizations %}
+            <a class="list-item with-thumb" href="/organizations/{{ organization.id }}">
+              {% if organization.image_path %}<img class="thumb" src="{{ organization.image_path }}" alt="">{% else %}<span class="thumb fallback">O</span>{% endif %}
+              <strong>{{ organization.display_name }}</strong>
+              <span>{{ organization.organization_type or "No type" }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="empty" data-i18n="no_organizations_yet">No organizations added yet.</p>
+      {% endif %}
+    </article>
+  </section>
+{% endblock %}

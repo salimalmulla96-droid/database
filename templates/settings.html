@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+{% block title %}Settings | Smart Database{% endblock %}
+{% block content %}
+  <section class="page-header">
+    <div>
+      <p class="eyebrow"><i class="fa-solid fa-sliders"></i> <span data-i18n="settings_center">Settings Center</span></p>
+      <h1 data-i18n="settings">Settings</h1>
+    </div>
+    <div class="actions">
+      {% if section not in ["overview", "appearance", "data"] %}
+        <button class="button" type="button" data-modal-open="option-modal"><i class="fa-solid fa-plus"></i> <span data-i18n="add_option">Add Option</span></button>
+      {% endif %}
+      <a class="button secondary" href="/settings/export"><i class="fa-solid fa-file-export"></i> <span data-i18n="export_settings">Export Settings</span></a>
+    </div>
+  </section>
+
+  <section class="settings-center">
+    <aside class="settings-subnav panel">
+      {% for key, item in settings_sections.items() %}
+        <a class="{{ 'active' if section == key else '' }}" href="/settings/{{ key }}">
+          <i class="fa-solid {{ item.icon }}"></i>
+          <span data-i18n="settings_{{ key }}">{{ item.label }}</span>
+        </a>
+      {% endfor %}
+    </aside>
+
+    <section class="settings-content">
+      <article class="panel settings-title-panel">
+        <div>
+          <h2><i class="fa-solid {{ current_section.icon }}"></i> <span data-i18n="settings_{{ section }}">{{ current_section.label }}</span></h2>
+          <p class="section-hint" data-i18n="settings_{{ section }}_desc">{{ current_section.description }}</p>
+        </div>
+      </article>
+
+      {% if section == "overview" %}
+        <section class="settings-overview-grid">
+          {% for key, item in settings_sections.items() if key != "overview" %}
+            <article class="settings-category-card">
+              <i class="fa-solid {{ item.icon }}"></i>
+              <div>
+                <h3 data-i18n="settings_{{ key }}">{{ item.label }}</h3>
+                <p data-i18n="settings_{{ key }}_desc">{{ item.description }}</p>
+              </div>
+              <a class="button secondary" href="/settings/{{ key }}" data-i18n="open">Open</a>
+            </article>
+          {% endfor %}
+        </section>
+      {% elif section == "appearance" %}
+        <section class="appearance-studio">
+          <form class="appearance-controls panel" action="/settings/appearance/apply" method="post" data-appearance-form>
+            {% if request.query_params.get("appearance_error") %}
+              <div class="warning-box" data-i18n="invalid_hex_warning">Invalid color code. Use #RGB or #RRGGBB, for example #0A2342.</div>
+            {% endif %}
+
+            <details class="settings-collapse" open>
+              <summary><i class="fa-solid fa-swatchbook"></i> <span data-i18n="color_system">Color System</span></summary>
+              {% for group in ["Brand Colors", "Layout Colors", "Text Colors", "State Colors"] %}
+                <section class="appearance-group">
+                  <h3>{{ group }}</h3>
+                  <div class="color-system-grid">
+                    {% for key, label_en, label_ar, desc_en, desc_ar, color_group in color_fields if color_group == group %}
+                      <label class="appearance-field" data-color-field data-default-color="{{ default_appearance[key] }}">
+                        <span data-bilingual-en="{{ label_en }}" data-bilingual-ar="{{ label_ar }}">{{ label_en }}</span>
+                        <small data-bilingual-en="{{ desc_en }}" data-bilingual-ar="{{ desc_ar }}">{{ desc_en }}</small>
+                        <div class="color-input-row">
+                          <input class="color-picker" type="color" value="{{ appearance_settings[key] }}" data-color-picker>
+                          <input class="hex-input" name="{{ key }}" value="{{ appearance_settings[key] }}" placeholder="#0A2342" data-appearance-input>
+                          <button class="icon-btn" type="button" data-reset-color title="Reset"><i class="fa-solid fa-rotate-left"></i></button>
+                        </div>
+                        <em class="field-warning" data-i18n="hex_format_hint">Use #RGB or #RRGGBB.</em>
+                      </label>
+                    {% endfor %}
+                  </div>
+                </section>
+              {% endfor %}
+            </details>
+
+            <details class="settings-collapse" open>
+              <summary><i class="fa-solid fa-font"></i> <span data-i18n="font_system">Font System</span></summary>
+              <div class="text-group-list">
+                {% for group, label_en, label_ar, desc_en, desc_ar in text_groups %}
+                  <section class="text-group-card">
+                    <div>
+                      <h3 data-bilingual-en="{{ label_en }}" data-bilingual-ar="{{ label_ar }}">{{ label_en }}</h3>
+                      <p data-bilingual-en="{{ desc_en }}" data-bilingual-ar="{{ desc_ar }}">{{ desc_en }}</p>
+                    </div>
+                    <label><span data-i18n="font_family">Font family</span>
+                      <select name="{{ group }}_font_family" data-appearance-input>
+                        {% for font in font_families %}<option value="{{ font }}" {{ 'selected' if appearance_settings[group ~ '_font_family'] == font else '' }}>{{ font }}</option>{% endfor %}
+                      </select>
+                    </label>
+                    <label><span data-i18n="font_size">Font size</span><input type="number" min="10" max="48" name="{{ group }}_font_size" value="{{ appearance_settings[group ~ '_font_size'] }}" data-appearance-input></label>
+                    <label><span data-i18n="font_weight">Font weight</span>
+                      <select name="{{ group }}_font_weight" data-appearance-input>
+                        {% for weight in font_weights %}<option value="{{ weight }}" {{ 'selected' if appearance_settings[group ~ '_font_weight'] == weight else '' }}>{{ weight }}</option>{% endfor %}
+                      </select>
+                    </label>
+                    <label><span data-i18n="letter_spacing">Letter spacing</span><input type="number" min="-1" max="3" step="0.1" name="{{ group }}_letter_spacing" value="{{ appearance_settings[group ~ '_letter_spacing'] }}" data-appearance-input></label>
+                  </section>
+                {% endfor %}
+              </div>
+            </details>
+
+            <details class="settings-collapse" open>
+              <summary><i class="fa-solid fa-layer-group"></i> <span data-i18n="component_style">Button, Card, Sidebar Style</span></summary>
+              <div class="appearance-grid compact">
+                <label><span data-i18n="card_style">Card radius</span><input type="number" min="0" max="20" name="card_radius" value="{{ appearance_settings.card_radius }}" data-appearance-input></label>
+                <label><span data-i18n="button_style">Button radius</span><input type="number" min="0" max="20" name="button_radius" value="{{ appearance_settings.button_radius }}" data-appearance-input></label>
+                <label><span data-i18n="sidebar_style">Sidebar width</span><input type="number" min="220" max="340" name="sidebar_width" value="{{ appearance_settings.sidebar_width }}" data-appearance-input></label>
+              </div>
+            </details>
+
+            <div class="appearance-actions">
+              <button class="button secondary" type="button" data-appearance-preview><i class="fa-solid fa-eye"></i> <span data-i18n="preview_changes">Preview Changes</span></button>
+              <button class="button" type="submit"><i class="fa-solid fa-check"></i> <span data-i18n="apply_changes">Apply Changes</span></button>
+            </div>
+          </form>
+
+          <aside class="appearance-preview-panel panel">
+            <div class="panel-title">
+              <h2><i class="fa-solid fa-desktop"></i> <span data-i18n="component_preview">Live Website Preview</span></h2>
+              <label class="preview-language"><span data-i18n="preview_language">Preview Language</span>
+                <select data-preview-language>
+                  <option value="en">English</option>
+                  <option value="ar">العربية</option>
+                </select>
+              </label>
+            </div>
+            <div class="mini-website" data-appearance-preview-surface>
+              <aside class="mini-sidebar">
+                <strong>Smart Database</strong>
+                <span><i class="fa-solid fa-table-cells-large"></i> Dashboard</span>
+                <span class="active"><i class="fa-solid fa-users"></i> People</span>
+                <span><i class="fa-solid fa-building"></i> Organizations</span>
+                <span><i class="fa-solid fa-gear"></i> Settings</span>
+              </aside>
+              <main class="mini-main">
+                <section class="mini-profile-header">
+                  <span class="avatar fallback">P</span>
+                  <div>
+                    <p class="eyebrow">Profile Header</p>
+                    <h2 data-preview-copy-en="People" data-preview-copy-ar="الأشخاص">People</h2>
+                    <div class="meta-row"><span>Active</span><span>High confidence</span></div>
+                  </div>
+                  <button class="button" type="button" data-preview-copy-en="Add Person" data-preview-copy-ar="إضافة شخص">Add Person</button>
+                </section>
+                <section class="mini-card-grid">
+                  <article class="preview-record">
+                    <div class="record-card-header">
+                      <span class="avatar fallback">P</span>
+                      <div class="record-title-area">
+                        <h3 class="record-title" data-preview-copy-en="Sample Person Name" data-preview-copy-ar="اسم شخص تجريبي">Sample Person Name</h3>
+                        <p class="record-subtitle" data-preview-copy-en="Personal profile with a long title that wraps cleanly" data-preview-copy-ar="ملف شخصي بعنوان طويل يلتف بشكل مرتب">Personal profile with a long title that wraps cleanly</p>
+                      </div>
+                      <div class="record-actions">
+                        <button class="icon-btn edit" type="button"><i class="fa-solid fa-pen"></i></button>
+                        <button class="icon-btn danger" type="button"><i class="fa-solid fa-trash"></i></button>
+                      </div>
+                    </div>
+                    <div class="meta-row"><span>UAE</span><span>Government Figure</span></div>
+                  </article>
+                  <article class="preview-record">
+                    <h3 class="record-title" data-preview-copy-en="Sample Organization" data-preview-copy-ar="جهة تجريبية">Sample Organization</h3>
+                    <p class="record-subtitle" data-preview-copy-en="Organization card subtitle" data-preview-copy-ar="وصف مختصر لبطاقة الجهة">Organization card subtitle</p>
+                    <div class="meta-row"><span>Active</span><span>Dubai</span></div>
+                  </article>
+                </section>
+                <section class="mini-form-row">
+                  <label><span data-preview-copy-en="Sample input" data-preview-copy-ar="حقل تجريبي">Sample input</span><input value="#0A2342"></label>
+                  <label><span data-preview-copy-en="Sample dropdown" data-preview-copy-ar="قائمة تجريبية">Sample dropdown</span><select><option>Status</option></select></label>
+                </section>
+                <article class="note-card">
+                  <strong data-preview-copy-en="Sample note card" data-preview-copy-ar="بطاقة ملاحظة تجريبية">Sample note card</strong>
+                  <p data-preview-copy-en="Descriptions, notes, explanations, and paragraphs use the body text group." data-preview-copy-ar="الوصف والملاحظات والشرح والفقرات تستخدم مجموعة النص العادي.">Descriptions, notes, explanations, and paragraphs use the body text group.</p>
+                </article>
+              </main>
+            </div>
+            <form action="/settings/appearance/reset" method="post" data-confirm-message="Do you want to reset appearance settings to default?&#10;&#10;هل تريد إعادة إعدادات المظهر إلى الوضع الافتراضي؟">
+              <button class="button secondary danger-button" type="submit"><i class="fa-solid fa-rotate-left"></i> <span data-i18n="reset_to_default">Reset Defaults</span></button>
+            </form>
+          </aside>
+        </section>
+      {% elif section == "data" %}
+        <section class="settings-overview-grid">
+          <article class="settings-category-card">
+            <i class="fa-solid fa-file-export"></i>
+            <div><h3>Export Center</h3><p>Download CSV and JSON exports from the database.</p></div>
+            <a class="button secondary" href="/export">Open</a>
+          </article>
+          <article class="settings-category-card">
+            <i class="fa-solid fa-shield-halved"></i>
+            <div><h3>Backup Center</h3><p>Create, download, and review backup files.</p></div>
+            <a class="button secondary" href="/backup">Open</a>
+          </article>
+          <article class="settings-category-card">
+            <i class="fa-solid fa-rotate-left"></i>
+            <div><h3>Reset Option Defaults</h3><p>Restore default dropdown options. Existing records are not deleted.</p></div>
+            <form action="/settings/reset-defaults" method="post" data-confirm-message="Reset settings options to defaults?">
+              <input type="hidden" name="section" value="data">
+              <button class="button secondary" type="submit">Reset</button>
+            </form>
+          </article>
+        </section>
+      {% else %}
+        <div class="settings-toolbar">
+          <label class="settings-search"><i class="fa-solid fa-magnifying-glass"></i><input data-settings-search placeholder="Search settings"></label>
+          <button class="button" type="button" data-modal-open="option-modal"><i class="fa-solid fa-plus"></i> <span data-i18n="add_option">Add Option</span></button>
+        </div>
+        {% for category in current_section.categories %}
+          <details class="panel option-category settings-collapse" open data-settings-category>
+            <summary><i class="fa-solid fa-list"></i> {{ category.replace("_", " ").title() }}</summary>
+            <div class="option-table">
+              {% for option in options_by_category.get(category, []) %}
+                <div class="option-row" data-preview-option data-settings-row data-search-text="{{ (option.label_en ~ ' ' ~ (option.label_ar or '') ~ ' ' ~ option.key)|lower }}" data-key="{{ option.key }}" data-label-en="{{ option.label_en }}" data-label-ar="{{ option.label_ar or option.label_en }}" data-icon="{{ option.icon or 'fa-circle' }}" data-color="{{ option.color or '#64748b' }}">
+                  <span class="option-icon" style="--option-color: {{ option.color or '#64748b' }}"><i class="fa-solid {{ option.icon or 'fa-circle' }}"></i></span>
+                  <div>
+                    <strong>{{ option.label_en }}</strong>
+                    <span>{{ option.label_ar or option.label_en }}</span>
+                    <small>{% if option.is_system %}Default option. Editing it may affect forms and filters.{% else %}{{ option.key }}{% endif %}</small>
+                  </div>
+                  <span class="badge">{{ 'Active' if option.is_active else 'Inactive' }}</span>
+                  <div class="row-actions">
+                    <button class="icon-btn edit" type="button" data-edit-option data-id="{{ option.id }}" data-label-en="{{ option.label_en }}" data-label-ar="{{ option.label_ar or '' }}" data-icon="{{ option.icon or '' }}" data-color="{{ option.color or '' }}"><i class="fa-solid fa-pen"></i></button>
+                    <form action="/settings/options/{{ option.id }}/toggle" method="post"><input type="hidden" name="section" value="{{ section }}"><button class="icon-btn" type="submit"><i class="fa-solid fa-toggle-on"></i></button></form>
+                    <form action="/settings/options/{{ option.id }}/move-up" method="post"><input type="hidden" name="section" value="{{ section }}"><button class="icon-btn" type="submit"><i class="fa-solid fa-arrow-up"></i></button></form>
+                    <form action="/settings/options/{{ option.id }}/move-down" method="post"><input type="hidden" name="section" value="{{ section }}"><button class="icon-btn" type="submit"><i class="fa-solid fa-arrow-down"></i></button></form>
+                    <form action="/settings/options/{{ option.id }}/delete" method="post" data-confirm-message="Delete this option? Default options can be edited or disabled instead."><input type="hidden" name="section" value="{{ section }}"><button class="icon-btn danger" type="submit"><i class="fa-solid fa-trash"></i></button></form>
+                  </div>
+                </div>
+              {% else %}
+                <p class="empty" data-i18n="no_options">No options in this category yet.</p>
+              {% endfor %}
+            </div>
+          </details>
+        {% endfor %}
+      {% endif %}
+    </section>
+  </section>
+
+  <div class="modal" id="option-modal" aria-hidden="true">
+    <div class="modal-dialog">
+      <button class="modal-close" type="button" data-modal-close>&times;</button>
+      <h2><i class="fa-solid fa-pen"></i> <span data-i18n="manage_option">Manage Option</span></h2>
+      <form class="modal-form" action="/settings/options/add" method="post" data-option-form>
+        <input type="hidden" name="section" value="{{ section }}">
+        <label><span data-i18n="category">Category</span><input name="category" data-option-category required></label>
+        <label><span data-i18n="key">Key</span><input name="key" required></label>
+        <label><span data-i18n="label_en">English Label</span><input name="label_en" data-preview-label-en required></label>
+        <label><span data-i18n="label_ar">Arabic Label</span><input name="label_ar" data-preview-label-ar dir="rtl"></label>
+        <label><span data-i18n="icon">Icon</span><input name="icon" data-preview-icon placeholder="fa-circle"></label>
+        <label><span data-i18n="color">Color</span><input type="color" name="color" data-preview-color value="#64748b"></label>
+        <p class="section-hint full-span">Default options can be edited and disabled. Deleting a default option may affect forms and filters.</p>
+        <div class="actions full-span">
+          <button class="button secondary" type="button" data-modal-close data-i18n="cancel">Cancel</button>
+          <button class="button" type="submit"><i class="fa-solid fa-check"></i> <span data-i18n="save">Save</span></button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}

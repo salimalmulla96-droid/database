@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Review Queue | Smart Database{% endblock %}
+{% block content %}
+  <section class="page-header">
+    <div>
+      <p class="eyebrow"><i class="fa-solid fa-list-check"></i> <span data-i18n="review_queue">Review Queue</span></p>
+      <h1 data-i18n="review_queue">Review Queue</h1>
+    </div>
+    <a class="button" href="/smart-add"><i class="fa-solid fa-plus"></i> <span data-i18n="smart_add">Smart Add</span></a>
+  </section>
+
+  <section class="review-board">
+    {% for status, items in grouped_items.items() %}
+      <article class="panel">
+        <h2><i class="fa-solid fa-folder-open"></i> <span data-value-label="{{ status }}">{{ status }}</span> <span class="badge">{{ items|length }}</span></h2>
+        <div class="review-list">
+          {% for item in items %}
+            {% set payload = extracted_payload(item) %}
+            <article class="review-card">
+              <div class="note-head">
+                <strong><i class="fa-solid fa-layer-group"></i> {{ item.input_type or "One Person" }}</strong>
+                <span class="badge" data-value-label="{{ item.status }}">{{ item.status or "Pending Review" }}</span>
+                <span class="badge confidence-{{ (item.confidence or 'Unknown')|lower|replace(' / ', '-')|replace(' ', '-') }}"><span data-value-label="{{ item.confidence }}">{{ item.confidence or "Unknown" }}</span></span>
+              </div>
+              <div class="meta-row">
+                {% set main_person = payload.get("main_person") or (payload.get("people", [])|first) %}
+                {% set main_org = payload.get("main_organization") or (payload.get("organizations", [])|first) %}
+                {% if main_person %}
+                  <span><i class="fa-solid fa-user"></i> {{ main_person.get("full_name") or [main_person.get("first_name"), main_person.get("second_name"), main_person.get("third_name"), main_person.get("family_name")]|select|join(" ") or "Name needed" }}</span>
+                {% endif %}
+                {% if main_org %}
+                  <span><i class="fa-solid fa-building"></i> {{ main_org.get("name") or "Organization needed" }}</span>
+                {% endif %}
+              </div>
+              <p>{{ item.raw_text[:220] }}{% if item.raw_text|length > 220 %}...{% endif %}</p>
+              <div class="meta-row">
+                <span><i class="fa-solid fa-user"></i> {{ payload.get("people", [])|length }}</span>
+                <span><i class="fa-solid fa-building"></i> {{ payload.get("organizations", [])|length }}</span>
+                <span><i class="fa-solid fa-briefcase"></i> {{ payload.get("positions", [])|length }}</span>
+                <span data-value-label="{{ item.privacy_level }}">{{ item.privacy_level or "Public Fact" }}</span>
+              </div>
+              {% if item.source_title or item.source_url %}<p class="section-hint">{{ item.source_title }} {{ item.source_url }}</p>{% endif %}
+              <div class="actions">
+                <a class="button secondary" href="/review/{{ item.id }}"><i class="fa-solid fa-eye"></i> <span data-i18n="review">Review</span></a>
+                <form action="/review/{{ item.id }}/reject" method="post"><button class="text-danger" type="submit"><i class="fa-solid fa-xmark"></i> <span data-i18n="reject">Reject</span></button></form>
+                <form action="/review/{{ item.id }}/delete" method="post" data-confirm-message="Delete this review item?"><button class="text-danger" type="submit"><i class="fa-solid fa-trash"></i> <span data-i18n="delete_extracted_item">Delete extracted item</span></button></form>
+              </div>
+            </article>
+          {% else %}
+            <p class="empty" data-i18n="empty_queue">No items in this status.</p>
+          {% endfor %}
+        </div>
+      </article>
+    {% endfor %}
+  </section>
+{% endblock %}

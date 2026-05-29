@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Add Person | Smart Database{% endblock %}
+{% block content %}
+  <section class="page-header">
+    <div>
+      <p class="eyebrow" data-i18n="new_record">New record</p>
+      <h1><i class="fa-solid fa-user-plus"></i> <span data-i18n="add_person">Add Person</span></h1>
+    </div>
+  </section>
+
+  <form class="form-panel" action="/people/add" method="post" enctype="multipart/form-data">
+    <section class="form-section photo-section">
+      <div>
+        <h2><i class="fa-solid fa-image"></i> <span data-i18n="main_photo">Photo</span></h2>
+        <p class="section-hint" data-i18n="photo_hint">Upload a profile image or keep the default avatar.</p>
+      </div>
+      <div class="upload-preview">
+        <span class="profile-image fallback" data-image-fallback>P</span>
+        <img class="profile-image hidden" alt="" data-image-preview>
+        <label><span data-i18n="person_image">Person Image</span><input type="file" name="image" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" data-preview-input></label>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h2><i class="fa-solid fa-id-card"></i> <span data-i18n="name_information">Name Information</span></h2>
+      <div class="form-grid">
+        <label><span data-i18n="first_name">First Name</span><input name="first_name" required></label>
+        <label><span data-i18n="second_name">Second Name</span><input name="second_name"></label>
+        <label><span data-i18n="third_name">Third Name</span><input name="third_name"></label>
+        <label><span data-i18n="fourth_name">Fourth Name</span><input name="fourth_name"></label>
+        <label><span data-i18n="family_name">Family Name</span><input name="family_name"></label>
+        <label><span data-i18n="tribe_name">Tribe Name</span><input name="tribe_name"></label>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h2><i class="fa-solid fa-fingerprint"></i> <span data-i18n="identity">Identity</span></h2>
+      <div class="form-grid">
+        <label><span data-i18n="gender">Gender</span><select name="gender">{% for item in genders %}<option value="{{ item }}" data-option-label="{{ item }}">{{ item }}</option>{% endfor %}</select></label>
+        <label><span data-i18n="nationality">Nationality</span><select name="nationality">{% for item in nationalities %}<option value="{{ item }}" data-option-label="{{ item }}">{{ item }}</option>{% endfor %}</select></label>
+        <label><span data-i18n="status">Status</span><select name="status">{% for item in person_statuses %}<option value="{{ item }}" data-option-label="{{ item }}">{{ item }}</option>{% endfor %}</select></label>
+        <label><span data-i18n="category">Category</span><select name="category">{% for item in person_categories %}<option value="{{ item }}" data-option-label="{{ item }}">{{ item }}</option>{% endfor %}</select></label>
+        <label><span data-i18n="birth_date">Birth Date</span><input type="date" name="birth_date"></label>
+        <label><span data-i18n="birth_place">Birth Place</span><input name="birth_place"></label>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h2><i class="fa-solid fa-tags"></i> <span data-i18n="tags">Tags</span></h2>
+      <label><span data-i18n="tags">Tags</span><input name="tags" data-i18n-placeholder="tags_placeholder"></label>
+    </section>
+
+    <div class="actions">
+      <a class="button secondary" href="/people"><i class="fa-solid fa-xmark"></i> <span data-i18n="cancel">Cancel</span></a>
+      <button class="button" type="submit"><i class="fa-solid fa-check"></i> <span data-i18n="save_person">Save Person</span></button>
+    </div>
+  </form>
+{% endblock %}

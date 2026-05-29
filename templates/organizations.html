@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Organizations | Smart Database{% endblock %}
+{% block content %}
+  <section class="page-header">
+    <div>
+      <p class="eyebrow" data-i18n="records">Records</p>
+      <h1 data-i18n="organizations">Organizations</h1>
+    </div>
+    <a class="button" href="/organizations/add" data-i18n="add_organization">Add Organization</a>
+  </section>
+
+  <form class="filter-bar" action="/organizations" method="get">
+    <select name="organization_type">
+      <option value="" data-i18n="filter_type">Type</option>
+      {% for item in organization_types %}<option value="{{ item }}" data-option-label="{{ item }}" {{ 'selected' if filters.organization_type == item else '' }}>{{ item }}</option>{% endfor %}
+    </select>
+    <select name="status">
+      <option value="" data-i18n="filter_status">Status</option>
+      {% for item in organization_statuses %}<option value="{{ item }}" data-option-label="{{ item }}" {{ 'selected' if filters.status == item else '' }}>{{ item }}</option>{% endfor %}
+    </select>
+    <select name="emirate">
+      <option value="" data-i18n="filter_emirate">Emirate</option>
+      {% for item in emirates %}<option value="{{ item }}" data-option-label="{{ item }}" {{ 'selected' if filters.emirate == item else '' }}>{{ item }}</option>{% endfor %}
+    </select>
+    <button class="button" type="submit" data-i18n="filter">Filter</button>
+    <a class="button secondary" href="/organizations" data-i18n="clear">Clear</a>
+  </form>
+
+  <section class="cards-grid">
+    {% for organization in organizations %}
+      <article class="record-card">
+        <div class="record-card-header">
+          <div class="record-avatar">
+            {% if organization.image_path %}<img class="avatar" src="{{ organization.image_path }}" alt="">{% else %}<span class="avatar fallback">O</span>{% endif %}
+          </div>
+          <a href="/organizations/{{ organization.id }}" class="record-title-area">
+            <h3 class="record-title">{{ organization.display_name }}</h3>
+            <p class="record-subtitle">{{ organization.alternative_name or organization.headquarters or organization.description or "Organization profile" }}</p>
+          </a>
+          <div class="record-actions">
+            <a href="/organizations/{{ organization.id }}/edit" class="icon-btn edit" title="Edit Organization" aria-label="Edit Organization">
+              <i class="fa-solid fa-pen"></i>
+            </a>
+            <form method="post" action="/organizations/{{ organization.id }}/delete" class="delete-form" onsubmit="return confirmOrganizationDelete(event)">
+              <button type="submit" class="icon-btn danger" title="Delete" aria-label="Delete">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+        <a href="/organizations/{{ organization.id }}">
+          <div class="meta-row">
+            <span data-value-label="{{ organization.organization_type }}">{{ organization.organization_type or "Type unknown" }}</span>
+            <span data-value-label="{{ organization.status }}">{{ organization.status or "Status unknown" }}</span>
+            <span data-value-label="{{ organization.emirate }}">{{ organization.emirate or "Location unknown" }}</span>
+          </div>
+        </a>
+      </article>
+    {% else %}
+      <p class="empty" data-i18n="no_organizations_found">No organizations found. Add your first organization record.</p>
+    {% endfor %}
+  </section>
+{% endblock %}

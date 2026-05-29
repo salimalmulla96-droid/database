@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Export Center | Smart Database{% endblock %}
+{% block content %}
+  <section class="page-header">
+    <div>
+      <p class="eyebrow"><i class="fa-solid fa-file-export"></i> <span data-i18n="export_center">Export Center</span></p>
+      <h1 data-i18n="export_center">Export Center</h1>
+    </div>
+  </section>
+
+  <section class="export-grid">
+    {% for action, title, icon in [
+      ("/export/people/csv", "People CSV", "fa-users"),
+      ("/export/organizations/csv", "Organizations CSV", "fa-building"),
+      ("/export/full/json", "Full JSON", "fa-code"),
+      ("/export/backup/zip", "ZIP Backup", "fa-file-zipper")
+    ] %}
+      <form class="panel export-card" action="{{ action }}" method="post">
+        <h2><i class="fa-solid {{ icon }}"></i> {{ title }}</h2>
+        <label class="checkbox"><input type="checkbox" name="include_private" value="yes"><span data-i18n="include_private">Include private notes</span></label>
+        <label class="checkbox"><input type="checkbox" name="include_sensitive" value="yes"><span data-i18n="include_sensitive">Include sensitive items</span></label>
+        <label class="checkbox"><input type="checkbox" name="include_files" value="yes" checked><span data-i18n="include_files">Include source files</span></label>
+        <label class="checkbox"><input type="checkbox" name="include_images" value="yes" checked><span data-i18n="include_images">Include uploaded images</span></label>
+        <label class="checkbox"><input type="checkbox" name="include_unverified" value="yes" checked><span data-i18n="include_unverified">Include unverified information</span></label>
+        <div class="warning-box"><i class="fa-solid fa-triangle-exclamation"></i> <span data-i18n="export_warning">Private and sensitive data are excluded unless checked.</span></div>
+        <div class="actions"><button class="button" type="submit"><i class="fa-solid fa-download"></i> <span data-i18n="download">Download</span></button></div>
+      </form>
+    {% endfor %}
+  </section>
+
+  <section class="panel">
+    <h2><i class="fa-solid fa-clock-rotate-left"></i> Export Logs</h2>
+    {% for log in logs %}
+      <p><strong>{{ log.export_type }}</strong> - {{ log.file_path }} - {{ log.created_at }}</p>
+    {% else %}<p class="empty">No exports yet.</p>{% endfor %}
+  </section>
+{% endblock %}

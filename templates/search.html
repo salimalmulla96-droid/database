@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Search | Smart Database{% endblock %}
+{% block content %}
+  <section class="page-header">
+    <div>
+      <p class="eyebrow" data-i18n="find_records">Find records</p>
+      <h1 data-i18n="search">Search</h1>
+    </div>
+  </section>
+
+  <form class="search-bar" action="/search" method="get">
+    <input name="q" value="{{ q }}" data-i18n-placeholder="search_placeholder">
+    <button class="button" type="submit" data-i18n="search">Search</button>
+  </form>
+
+  <section class="content-grid">
+    <article class="panel">
+      <h2 data-i18n="people_results">People results</h2>
+      {% if q and people %}
+        <div class="list">
+          {% for person in people %}
+            <a class="list-item with-thumb" href="/people/{{ person.id }}">
+              {% if person.image_path %}<img class="thumb" src="{{ person.image_path }}" alt="">{% else %}<span class="thumb fallback">P</span>{% endif %}
+              <strong>{{ person.display_name }}</strong>
+              <span>{{ person.category or person.nationality or "Person" }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      {% elif q %}
+        <p class="empty" data-i18n="no_people_match">No people matched your search.</p>
+      {% else %}
+        <p class="empty" data-i18n="enter_search">Enter a search term to begin.</p>
+      {% endif %}
+    </article>
+
+    <article class="panel">
+      <h2 data-i18n="organization_results">Organization results</h2>
+      {% if q and organizations %}
+        <div class="list">
+          {% for organization in organizations %}
+            <a class="list-item with-thumb" href="/organizations/{{ organization.id }}">
+              {% if organization.image_path %}<img class="thumb" src="{{ organization.image_path }}" alt="">{% else %}<span class="thumb fallback">O</span>{% endif %}
+              <strong>{{ organization.display_name }}</strong>
+              <span>{{ organization.organization_type or "Organization" }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      {% elif q %}
+        <p class="empty" data-i18n="no_organizations_match">No organizations matched your search.</p>
+      {% else %}
+        <p class="empty" data-i18n="search_org_hint">Search by English name, Arabic name, type, or notes.</p>
+      {% endif %}
+    </article>
+
+    <article class="panel full-span">
+      <h2 data-i18n="position_results">Position results</h2>
+      {% if q and positions %}
+        <div class="timeline">
+          {% for position in positions %}
+            <a class="timeline-item" href="/people/{{ position.person.id }}">
+              <strong>{{ position.position_title }}</strong>
+              <span>{{ position.person.display_name }} - {{ position.organization.display_name }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      {% elif q %}
+        <p class="empty" data-i18n="no_positions_match">No positions matched your search.</p>
+      {% else %}
+        <p class="empty" data-i18n="search_position_hint">Position matches will appear here.</p>
+      {% endif %}
+    </article>
+
+    <article class="panel full-span">
+      <h2><i class="fa-solid fa-note-sticky"></i> <span data-i18n="note_results">Note results</span></h2>
+      {% if q and notes %}
+        <div class="timeline">
+          {% for note in notes %}
+            <a class="timeline-item" href="/{{ 'people' if note.entity_type == 'person' else 'organizations' }}/{{ note.entity_id }}">
+              <strong>{{ note.title or note.note_type }}</strong>
+              <span data-value-label="{{ note.note_type }}">{{ note.note_type }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      {% elif q %}
+        <p class="empty" data-i18n="no_notes_match">No notes matched your search.</p>
+      {% else %}
+        <p class="empty" data-i18n="search_note_hint">Note matches will appear here.</p>
+      {% endif %}
+    </article>
+  </section>
+{% endblock %}

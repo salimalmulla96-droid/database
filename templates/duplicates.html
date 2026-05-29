@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Duplicate Center | Smart Database{% endblock %}
+{% block content %}
+  <section class="page-header">
+    <div>
+      <p class="eyebrow"><i class="fa-solid fa-copy"></i> <span data-i18n="duplicate_center">Duplicate Center</span></p>
+      <h1 data-i18n="duplicate_center">Duplicate Center</h1>
+    </div>
+    <form action="/duplicates/check" method="post"><button class="button" type="submit"><i class="fa-solid fa-rotate"></i> <span data-i18n="run_duplicate_check">Run Duplicate Check</span></button></form>
+  </section>
+
+  <section class="content-grid">
+    <article class="panel">
+      <h2><i class="fa-solid fa-users"></i> <span data-i18n="people_duplicates">People Duplicates</span></h2>
+      {% for dup in people_duplicates %}
+        <div class="duplicate-row">
+          <div><strong>{{ dup.left.display_name }}</strong><span>{{ dup.right.display_name }}</span></div>
+          <span class="badge">{{ dup.score }}% {{ duplicate_label(dup.score) }}</span>
+          <span>{{ dup.reason }}</span>
+          <div class="actions">
+            <a class="button secondary" href="/people/{{ dup.left.id }}"><i class="fa-solid fa-up-right-from-square"></i></a>
+            <a class="button secondary" href="/people/{{ dup.right.id }}"><i class="fa-solid fa-up-right-from-square"></i></a>
+            <form action="/duplicates/mark-not-duplicate" method="post"><input type="hidden" name="entity_type" value="person"><input type="hidden" name="entity_id_1" value="{{ dup.left.id }}"><input type="hidden" name="entity_id_2" value="{{ dup.right.id }}"><button class="button secondary" type="submit" data-i18n="keep_separate">Keep Separate</button></form>
+          </div>
+        </div>
+      {% else %}<p class="empty" data-i18n="no_duplicates">No possible duplicates found.</p>{% endfor %}
+    </article>
+
+    <article class="panel">
+      <h2><i class="fa-solid fa-building"></i> <span data-i18n="organization_duplicates">Organization Duplicates</span></h2>
+      {% for dup in organization_duplicates %}
+        <div class="duplicate-row">
+          <div><strong>{{ dup.left.display_name }}</strong><span>{{ dup.right.display_name }}</span></div>
+          <span class="badge">{{ dup.score }}% {{ duplicate_label(dup.score) }}</span>
+          <span>{{ dup.reason }}</span>
+          <div class="actions">
+            <a class="button secondary" href="/organizations/{{ dup.left.id }}"><i class="fa-solid fa-up-right-from-square"></i></a>
+            <a class="button secondary" href="/organizations/{{ dup.right.id }}"><i class="fa-solid fa-up-right-from-square"></i></a>
+            <form action="/duplicates/mark-not-duplicate" method="post"><input type="hidden" name="entity_type" value="organization"><input type="hidden" name="entity_id_1" value="{{ dup.left.id }}"><input type="hidden" name="entity_id_2" value="{{ dup.right.id }}"><button class="button secondary" type="submit" data-i18n="keep_separate">Keep Separate</button></form>
+          </div>
+        </div>
+      {% else %}<p class="empty" data-i18n="no_duplicates">No possible duplicates found.</p>{% endfor %}
+    </article>
+  </section>
+{% endblock %}

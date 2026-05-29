@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Smart Import | Smart Database{% endblock %}
+{% block content %}
+  <section class="page-header">
+    <div>
+      <p class="eyebrow"><i class="fa-solid fa-upload"></i> <span data-i18n="smart_import">Smart Import</span></p>
+      <h1 data-i18n="smart_import">Smart Import</h1>
+    </div>
+  </section>
+
+  <section class="content-grid">
+    <form class="panel" action="/smart-import/upload" method="post" enctype="multipart/form-data">
+      <h2><i class="fa-solid fa-file-csv"></i> CSV / Excel</h2>
+      <p class="section-hint" data-i18n="import_hint">CSV is supported in this first version. Excel/PDF/Word/Image import are placeholders.</p>
+      <label><span data-i18n="source_file">Upload File</span><input type="file" name="import_file" accept=".csv,.txt" required></label>
+      <div class="actions"><button class="button" type="submit"><i class="fa-solid fa-eye"></i> <span data-i18n="preview">Preview</span></button></div>
+    </form>
+    <article class="panel">
+      <h2><i class="fa-solid fa-file-import"></i> Future Import Types</h2>
+      <div class="helper-grid">
+        <p>JSON backup</p><p>PDF / Word</p><p>Image / Screenshot</p><p>Excel with mapping</p>
+      </div>
+    </article>
+  </section>
+
+  {% if preview_rows %}
+    <section class="panel">
+      <h2><i class="fa-solid fa-table"></i> <span data-i18n="preview">Preview</span></h2>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr>{% for column in columns %}<th>{{ column }}</th>{% endfor %}</tr></thead>
+          <tbody>{% for row in preview_rows %}<tr>{% for column in columns %}<td>{{ row.get(column, "") }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+        </table>
+      </div>
+      <form action="/smart-import/confirm" method="post">
+        <textarea class="hidden" name="raw_csv">{{ raw_csv }}</textarea>
+        <div class="actions"><button class="button" type="submit"><i class="fa-solid fa-list-check"></i> <span data-i18n="import_to_review">Import selected to Review Queue</span></button></div>
+      </form>
+    </section>
+  {% endif %}
+{% endblock %}

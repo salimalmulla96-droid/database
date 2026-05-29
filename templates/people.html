@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}People | Smart Database{% endblock %}
+{% block content %}
+  <section class="page-header">
+    <div>
+      <p class="eyebrow" data-i18n="records">Records</p>
+      <h1 data-i18n="people">People</h1>
+    </div>
+    <a class="button" href="/people/add" data-i18n="add_person">Add Person</a>
+  </section>
+
+  <form class="filter-bar" action="/people" method="get">
+    <select name="gender">
+      <option value="" data-i18n="filter_gender">Gender</option>
+      {% for item in genders %}<option value="{{ item }}" data-option-label="{{ item }}" {{ 'selected' if filters.gender == item else '' }}>{{ item }}</option>{% endfor %}
+    </select>
+    <select name="nationality">
+      <option value="" data-i18n="filter_nationality">Nationality</option>
+      {% for item in nationalities %}<option value="{{ item }}" data-option-label="{{ item }}" {{ 'selected' if filters.nationality == item else '' }}>{{ item }}</option>{% endfor %}
+    </select>
+    <select name="status">
+      <option value="" data-i18n="filter_status">Status</option>
+      {% for item in person_statuses %}<option value="{{ item }}" data-option-label="{{ item }}" {{ 'selected' if filters.status == item else '' }}>{{ item }}</option>{% endfor %}
+    </select>
+    <select name="category">
+      <option value="" data-i18n="filter_category">Category</option>
+      {% for item in person_categories %}<option value="{{ item }}" data-option-label="{{ item }}" {{ 'selected' if filters.category == item else '' }}>{{ item }}</option>{% endfor %}
+    </select>
+    <input name="tribe" value="{{ filters.tribe }}" data-i18n-placeholder="tribe_name">
+    <input name="family_name" value="{{ filters.family_name }}" data-i18n-placeholder="family_name">
+    <button class="button" type="submit" data-i18n="filter">Filter</button>
+    <a class="button secondary" href="/people" data-i18n="clear">Clear</a>
+  </form>
+
+  <section class="cards-grid">
+    {% for person in people %}
+      <article class="record-card">
+        <div class="record-card-header">
+          <div class="record-avatar">
+            {% if person.image_path %}<img class="avatar" src="{{ person.image_path }}" alt="">{% else %}<span class="avatar fallback">P</span>{% endif %}
+          </div>
+          <a href="/people/{{ person.id }}" class="record-title-area">
+            <h3 class="record-title">{{ person.display_name }}</h3>
+            {% set current = (person.positions | selectattr("is_current") | list | first) %}
+            <p class="record-subtitle">{% if current %}{{ current.position_title }} - {{ current.organization.display_name }}{% else %}{{ person.tags or "Personal profile" }}{% endif %}</p>
+          </a>
+          <div class="record-actions">
+            <a href="/people/{{ person.id }}/edit" class="icon-btn edit" title="Edit Person" aria-label="Edit Person">
+              <i class="fa-solid fa-pen"></i>
+            </a>
+            <form method="post" action="/people/{{ person.id }}/delete" class="delete-form" onsubmit="return confirmPersonDelete(event)">
+              <button type="submit" class="icon-btn danger" title="Delete" aria-label="Delete">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+        <a href="/people/{{ person.id }}">
+          <div class="meta-row">
+            <span data-value-label="{{ person.category }}">{{ person.category or "Uncategorized" }}</span>
+            <span data-value-label="{{ person.nationality }}">{{ person.nationality or "Nationality unknown" }}</span>
+            <span data-value-label="{{ person.status }}">{{ person.status or "Status unknown" }}</span>
+          </div>
+        </a>
+      </article>
+    {% else %}
+      <p class="empty" data-i18n="no_people_found">No people found. Add your first person record.</p>
+    {% endfor %}
+  </section>
+{% endblock %}

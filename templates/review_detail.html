@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}Review Item #{{ item.id }} | Smart Database{% endblock %}
+{% block content %}
+  {% set review_type = item.input_type or "One Person" %}
+  {% set normalized_type = "One Person" if review_type in ["Person", "Unknown / Auto Detect"] else ("One Organization" if review_type == "Organization" else review_type) %}
+  {% set person = (payload.get("main_person") or (payload.get("people", [{}])|first) or {}) %}
+  {% set main_org = (payload.get("main_organization") or (payload.get("organizations", [{}])|first) or {}) %}
+  <section class="page-header">
+    <div>
+      <p class="eyebrow"><i class="fa-solid fa-clipboard-check"></i> <span data-i18n="review_item">Review Item</span></p>
+      <h1>#{{ item.id }} - <span data-value-label="{{ item.status }}">{{ item.status }}</span></h1>
+    </div>
+    <div class="actions">
+      <a class="button secondary" href="/smart-add"><i class="fa-solid fa-arrow-left"></i> <span data-i18n="back_to_smart_add">Back to Smart Add</span></a>
+      <a class="button secondary" href="/review"><i class="fa-solid fa-list-check"></i> <span data-i18n="review_queue">Review Queue</span></a>
+    </div>
+  </section>
+
+  <section class="review-editor">
+    <article class="panel review-summary">
+      <div>
+        <h2><i class="fa-solid fa-file-lines"></i> <span data-i18n="original_text">Original pasted text</span></h2>
+        <p class="long-text">{{ item.raw_text }}</p>
+      </div>
+      <div class="meta-row">
+        <span><i class="fa-solid fa-layer-group"></i> {{ normalized_type }}</span>
+        <span data-value-label="{{ item.confidence }}">{{ item.confidence or "Unknown" }}</span>
+        <span data-value-label="{{ item.privacy_level }}">{{ item.privacy_level or "Public Fact" }}</span>
+        <span>{{ item.source_title or item.source_type or "No source title" }}</span>
+      </div>
+    </article>
+
+    <form class="review-form" action="/review/{{ item.id }}/approve" method="post">
+      {% if normalized_type == "One Organization" %}
+        <article class="panel review-section">
+          <h2><i class="fa-solid fa-building"></i> <span data-i18n="extracted_organization">Extracted Organization</span></h2>
+          <div class="form-grid">
+            <label><span data-i18n="name">Name</span><input name="organization_name" value="{{ main_org.get('name', '') }}"></label>
+            <label><span data-i18n="organization_type">Organization Type</span><select name="organization_type">{% for option in organization_types %}<option value="{{ option }}" data-option-label="{{ option }}" {{ 'selected' if main_org.get('organization_type') == option else '' }}>{{ option }}</option>{% endfor %}</select></label>
+            <label><span data-i18n="emirate">Emirate</span><select name="organization_emirate">{% for option in emirates %}<option value="{{ option }}" data-option-label="{{ option }}" {{ 'selected' if main_org.get('emirate') == option else '' }}>{{ option }}</option>{% endfor %}</select></label>
+            <label class="full-span"><span data-i18n="notes">Notes</span><textarea name="organization_notes" rows="3">{{ main_org.get('notes', '') }}</textarea></label>
+          </div>
+        </article>
+      {% elif normalized_type == "Mixed Information" %}
+        <article class="panel review-section">
+          <h2><i class="fa-solid fa-layer-group"></i> <span data-i18n="mixed_detected_items">Mixed Detected Items</span></h2>
+          <div class="review-cards-grid">
+            {% for candidate in payload.get("people", []) %}
+              <label class="select-card checkbox"><input type="checkbox" name="create_person_{{ loop.index0 }}" value="yes"><span><i class="fa-solid fa-user"></i> {{ candidate.get("full_name") or candidate.get("name") or "Unnamed person" }}</span></label>
+            {% endfor %}
+            {% for organization in payload.get("organizations", []) %}
+              <label class="select-card checkbox"><input type="checkbox" name="create_organization_{{ loop.index0 }}" value="yes"><span><i class="fa-solid fa-building"></i> {{ organization.get("name") or "Unnamed organization" }}</span></label>
+            {% endfor %}
+          </div>
+        </article>
+      {% else %}
+        <article class="panel review-section">
+          <h2><i class="fa-solid fa-user"></i> <span data-i18n="extracted_person">Extracted Person</span></h2>
+          <div class="form-grid">
+            <label><span data-i18n="first_name">First Name</span><input name="first_name" value="{{ person.get('first_name', '') }}"></label>
+            <label><span data-i18n="second_name">Second Name</span><input name="second_name" value="{{ person.get('second_name', '') }}"></label>
+            <label><span data-i18n="third_name">Third Name</span><input name="third_name" value="{{ person.get('third_name', '') }}"></label>
+            <label><span data-i18n="fourth_name">Fourth Name</span><input name="fourth_name" value="{{ person.get('fourth_name', '') }}"></label>
+            <label><span data-i18n="family_name">Family Name</span><input name="family_name" value="{{ person.get('family_name', '') }}"></label>
+            <label><span data-i18n="tribe_name">Tribe Name</span><input name="tribe_name" value="{{ person.get('tribe_name', '') }}"></label>
+            <label><span data-i18n="gender">Gender</span><select name="gender">{% for option in genders %}<option value="{{ option }}" data-option-label="{{ option }}" {{ 'selected' if person.get('gender') == option else '' }}>{{ option }}</option>{% endfor %}</select></label>
+            <label><span data-i18n="nationality">Nationality</span><select name="nationality">{% for option in nationalities %}<option value="{{ option }}" data-option-label="{{ option }}" {{ 'selected' if person.get('nationality') == option else '' }}>{{ option }}</option>{% endfor %}</select></label>
+            <label><span data-i18n="status">Status</span><select name="status">{% for option in person_statuses %}<option value="{{ option }}" data-option-label="{{ option }}" {{ 'selected' if person.get('status') == option else '' }}>{{ option }}</option>{% endfor %}</select></label>
+            <label><span data-i18n="category">Category</span><select name="category">{% for option in person_categories %}<option value="{{ option }}" data-option-label="{{ option }}" {{ 'selected' if person.get('category') == option else '' }}>{{ option }}</option>{% endfor %}</select></label>
+            <label><span data-i18n="birth_date">Birth Date</span><input type="date" name="birth_date" value="{{ person.get('birth_date', '') }}"></label>
+            <label><span data-i18n="birth_place">Birth Place</span><input name="birth_place" value="{{ person.get('birth_place', '') }}"></label>
+            <label class="full-span"><span data-i18n="tags">Tags</span><input name="tags" value="{{ person.get('tags', '') }}"></label>
+          </div>
+        </article>
+
+        <article class="panel review-section">
+          <div class="panel-title">
+            <h2><i class="fa-solid fa-briefcase"></i> <span data-i18n="current_role_career">Current Role / Career</span></h2>
+            <button class="button secondary" type="button" data-add-review-card="career"><i class="fa-solid fa-plus"></i> <span data-i18n="add_career_entry">Add another career entry</span></button>
+          </div>
+          <div class="editable-card-list" data-review-list="career">
+            {% for position in payload.get("positions", []) %}
+              <article class="editable-card" data-review-card>
+                <label class="checkbox"><input type="checkbox" name="position_create_{{ loop.index0 }}" value="yes" checked><span data-i18n="create_position">Create position</span></label>
+                <div class="form-grid">
+                  <label><span data-i18n="organization">Organization</span><input name="position_organization_{{ loop.index0 }}" value="{{ position.get('organization', '') }}"></label>
+                  <label><span data-i18n="position_title">Position Title</span><input name="position_title_{{ loop.index0 }}" value="{{ position.get('position_title', '') }}"></label>
+                  <label><span data-i18n="department">Department</span><input name="position_department_{{ loop.index0 }}" value="{{ position.get('department', '') }}"></label>
+                  <label><span data-i18n="start_year">Start Year</span><input type="number" name="position_start_year_{{ loop.index0 }}" value="{{ position.get('start_year', '') }}"></label>
+                  <label><span data-i18n="end_year">End Year</span><input type="number" name="position_end_year_{{ loop.index0 }}" value="{{ position.get('end_year', '') }}"></label>
+                  <label><span data-i18n="role_type">Role Type</span><select name="position_role_type_{{ loop.index0 }}">{% for option in role_types %}<option value="{{ option }}" data-option-label="{{ option }}" {{ 'selected' if position.get('role_type') == option else '' }}>{{ option }}</option>{% endfor %}</select></label>
+                  <label class="checkbox"><input type="checkbox" name="position_is_current_{{ loop.index0 }}" value="yes" {{ 'checked' if position.get('is_current') else '' }}><span data-i18n="current_role_checkbox">Current role</span></label>
+                  <label class="full-span"><span data-i18n="notes">Notes</span><textarea name="position_notes_{{ loop.index0 }}" rows="2">{{ position.get('notes', '') }}</textarea></label>
+                </div>
+                <button class="text-danger" type="button" data-remove-review-card><i class="fa-solid fa-trash"></i> <span data-i18n="remove">Remove</span></button>
+              </article>
+            {% else %}
+              <p class="empty" data-i18n="no_position_history">No position history added.</p>
+            {% endfor %}
+          </div>
+        </article>
+
+        <article class="panel review-section">
+          <div class="panel-title">
+            <h2><i class="fa-solid fa-graduation-cap"></i> <span data-i18n="education">Education</span></h2>
+            <button class="button secondary" type="button" data-add-review-card="education"><i class="fa-solid fa-plus"></i> <span data-i18n="add_education">Add Education</span></button>
+          </div>
+          <div class="editable-card-list" data-review-list="education">
+            {% for education in payload.get("education", []) %}
+              <article class="editable-card" data-review-card>
+                <label class="checkbox"><input type="checkbox" name="education_create_{{ loop.index0 }}" value="yes" checked><span data-i18n="create_education">Create education</span></label>
+                <div class="form-grid">
+                  <label><span data-i18n="institution">Institution</span><input name="education_institution_{{ loop.index0 }}" value="{{ education.get('institution', education.get('text', '')) }}"></label>
+                  <label><span data-i18n="degree">Degree</span><input name="education_degree_{{ loop.index0 }}" value="{{ education.get('degree', '') }}"></label>
+                  <label><span data-i18n="major">Major</span><input name="education_major_{{ loop.index0 }}" value="{{ education.get('major', '') }}"></label>
+                  <label><span data-i18n="start_year">Start Year</span><input type="number" name="education_start_year_{{ loop.index0 }}" value="{{ education.get('start_year', '') }}"></label>
+                  <label><span data-i18n="end_year">End Year</span><input type="number" name="education_end_year_{{ loop.index0 }}" value="{{ education.get('end_year', '') }}"></label>
+                  <label><span data-i18n="graduation_year">Graduation Year</span><input type="number" name="education_graduation_year_{{ loop.index0 }}" value="{{ education.get('graduation_year', '') }}"></label>
+                  <label><span data-i18n="country">Country</span><input name="education_country_{{ loop.index0 }}" value="{{ education.get('country', '') }}"></label>
+                  <label class="full-span"><span data-i18n="notes">Notes</span><textarea name="education_notes_{{ loop.index0 }}" rows="2">{{ education.get('notes', '') }}</textarea></label>
+                </div>
+                <button class="text-danger" type="button" data-remove-review-card><i class="fa-solid fa-trash"></i> <span data-i18n="remove">Remove</span></button>
+              </article>
+            {% else %}
+              <p class="empty" data-i18n="no_education">No education added yet.</p>
+            {% endfor %}
+          </div>
+        </article>
+
+        <article class="panel review-section">
+          <h2><i class="fa-solid fa-building"></i> <span data-i18n="organizations_detected">Organizations Detected</span></h2>
+          <div class="editable-card-list">
+            {% for organization in payload.get("organizations", []) %}
+              <article class="editable-card">
+                <div class="segmented compact-segmented">
+                  <label><input type="radio" name="organization_action_{{ loop.index0 }}" value="create" checked> <span data-i18n="create_organization">Create organization</span></label>
+                  <label><input type="radio" name="organization_action_{{ loop.index0 }}" value="existing"> <span data-i18n="link_existing">Link existing</span></label>
+                  <label><input type="radio" name="organization_action_{{ loop.index0 }}" value="ignore"> <span data-i18n="ignore">Ignore</span></label>
+                </div>
+                <div class="form-grid">
+                  <label><span data-i18n="name">Name</span><input name="organization_name_{{ loop.index0 }}" value="{{ organization.get('name', '') }}"></label>
+                  <label><span data-i18n="organization_type">Organization Type</span><select name="organization_type_{{ loop.index0 }}">{% for option in organization_types %}<option value="{{ option }}" data-option-label="{{ option }}" {{ 'selected' if organization.get('organization_type') == option else '' }}>{{ option }}</option>{% endfor %}</select></label>
+                  <label><span data-i18n="emirate">Emirate</span><select name="organization_emirate_{{ loop.index0 }}">{% for option in emirates %}<option value="{{ option }}" data-option-label="{{ option }}" {{ 'selected' if organization.get('emirate') == option else '' }}>{{ option }}</option>{% endfor %}</select></label>
+                  <label><span data-i18n="existing_organization">Existing Organization</span><select name="organization_existing_id_{{ loop.index0 }}"><option value="">-</option>{% for existing in organizations %}<option value="{{ existing.id }}">{{ existing.display_name }}</option>{% endfor %}</select></label>
+                  <label class="full-span"><span data-i18n="notes">Notes</span><textarea name="organization_notes_{{ loop.index0 }}" rows="2">{{ organization.get('notes', '') }}</textarea></label>
+                </div>
+              </article>
+            {% else %}
+              <p class="empty" data-i18n="no_organizations_found">No organizations found.</p>
+            {% endfor %}
+          </div>
+        </article>
+      {% endif %}
+
+      <article class="panel review-section">
+        <h2><i class="fa-solid fa-note-sticky"></i> <span data-i18n="note_from_original_paragraph">Note From Original Paragraph</span></h2>
+        <div class="form-grid">
+          <label><span data-i18n="note_type">Note Type</span><select name="note_type">{% for option in note_types %}<option value="{{ option }}" data-option-label="{{ option }}" {{ 'selected' if option == 'Source Note' else '' }}>{{ option }}</option>{% endfor %}</select></label>
+          <label><span data-i18n="title">Title</span><input name="note_title" value="Imported paragraph"></label>
+          <label class="full-span"><span data-i18n="content">Content</span><textarea name="note_content" rows="6">{{ item.raw_text }}</textarea></label>
+          <label><span data-i18n="confidence">Confidence</span><select name="note_confidence">{% for option in confidence_options %}<option value="{{ option }}" data-option-label="{{ option }}" {{ 'selected' if item.confidence == option else '' }}>{{ option }}</option>{% endfor %}</select></label>
+          <label><span data-i18n="source_type">Source Type</span><select name="source_type">{% for option in intake_source_types %}<option value="{{ option }}" data-option-label="{{ option }}" {{ 'selected' if item.source_type == option else '' }}>{{ option }}</option>{% endfor %}</select></label>
+          <label><span data-i18n="source_title">Source Title</span><input name="source_title" value="{{ item.source_title or '' }}"></label>
+          <label><span data-i18n="source_url">Source URL</span><input type="url" name="source_url" value="{{ item.source_url or '' }}"></label>
+          <label><span data-i18n="privacy_level">Privacy</span><select name="privacy_level">{% for option in privacy_options %}<option value="{{ option }}" data-option-label="{{ option }}" {{ 'selected' if item.privacy_level == option else '' }}>{{ option }}</option>{% endfor %}</select></label>
+        </div>
+      </article>
+
+      <article class="panel review-section">
+        <h2><i class="fa-solid fa-copy"></i> <span data-i18n="possible_duplicates">Possible Duplicates</span></h2>
+        <div class="segmented compact-segmented">
+          <label><input type="radio" name="duplicate_action" value="create" checked> <span data-i18n="create_new">Create new</span></label>
+          <label><input type="radio" name="duplicate_action" value="merge"> <span data-i18n="merge_existing">Merge with existing</span></label>
+          <label><input type="radio" name="duplicate_action" value="update"> <span data-i18n="update_existing">Update existing</span></label>
+          <label><input type="radio" name="duplicate_action" value="cancel"> <span data-i18n="cancel">Cancel</span></label>
+        </div>
+        {% for dup in possible_people[:3] %}<p><strong>{{ dup.left.display_name }}</strong> / {{ dup.right.display_name }} - {{ dup.score }}% {{ duplicate_label(dup.score) }}</p>{% endfor %}
+        {% for dup in possible_organizations[:3] %}<p><strong>{{ dup.left.display_name }}</strong> / {{ dup.right.display_name }} - {{ dup.score }}% {{ duplicate_label(dup.score) }}</p>{% endfor %}
+        {% if not possible_people and not possible_organizations %}<p class="empty" data-i18n="no_duplicates">No possible duplicates found.</p>{% endif %}
+      </article>
+
+      <details class="panel advanced-json">
+        <summary><i class="fa-solid fa-code"></i> <span data-i18n="advanced_raw_data">Advanced: View raw extracted data</span></summary>
+        <pre>{{ payload | tojson(indent=2) }}</pre>
+      </details>
+
+      <div class="actions sticky-actions">
+        <button class="button" type="submit"><i class="fa-solid fa-check"></i> <span data-i18n="approve_create_profile">Approve & Create Profile</span></button>
+      </div>
+    </form>
+
+    <div class="actions review-secondary-actions">
+      <form action="/review/{{ item.id }}/save-note" method="post"><button class="button secondary" type="submit"><i class="fa-solid fa-note-sticky"></i> <span data-i18n="save_as_note_only">Save as Note Only</span></button></form>
+      <form action="/review/{{ item.id }}/reject" method="post"><button class="button secondary" type="submit"><i class="fa-solid fa-xmark"></i> <span data-i18n="cancel">Cancel</span></button></form>
+    </div>
+  </section>
+{% endblock %}

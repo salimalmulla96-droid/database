@@ -17,7 +17,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import inspect, or_, text
 from sqlalchemy.orm import Session
 
-from .database import Base, engine, get_db
+from .database import Base, DATABASE_PATH, engine, get_db
 from .models import (
     AppearanceSetting,
     BackupLog,
@@ -37,16 +37,27 @@ from .models import (
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-STATIC_DIR = BASE_DIR / "static"
 TEMPLATES_DIR = BASE_DIR / "templates"
-UPLOAD_DIR = STATIC_DIR / "uploads"
-SOURCE_UPLOAD_DIR = UPLOAD_DIR / "sources"
-EXPORT_DIR = BASE_DIR / "exports"
-BACKUP_DIR = BASE_DIR / "backups"
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-SOURCE_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-EXPORT_DIR.mkdir(parents=True, exist_ok=True)
-BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+STATIC_DIR = BASE_DIR / "static"
+UPLOADS_DIR = STATIC_DIR / "uploads"
+SOURCES_UPLOADS_DIR = UPLOADS_DIR / "sources"
+EXPORTS_DIR = BASE_DIR / "exports"
+BACKUPS_DIR = BASE_DIR / "backups"
+
+def ensure_folder(folder: Path):
+    try:
+        folder.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        print(f"Could not create folder {folder}: {exc}")
+
+
+for folder in [STATIC_DIR, UPLOADS_DIR, SOURCES_UPLOADS_DIR, EXPORTS_DIR, BACKUPS_DIR]:
+    ensure_folder(folder)
+
+UPLOAD_DIR = UPLOADS_DIR
+SOURCE_UPLOAD_DIR = SOURCES_UPLOADS_DIR
+EXPORT_DIR = EXPORTS_DIR
+BACKUP_DIR = BACKUPS_DIR
 
 Base.metadata.create_all(bind=engine)
 
@@ -58,7 +69,7 @@ templates.env.cache = None
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "app": "Smart Database"}
 
 PERSON_GENDERS = ["Male", "Female", "Unknown"]
 NATIONALITIES = [
@@ -1426,8 +1437,8 @@ def create_backup_zip(db):
         write_csv(temp_dir / filename, table_rows(db, model, columns), columns)
     (temp_dir / "settings_export.json").write_text(json.dumps(export_settings_payload(db), ensure_ascii=False, indent=2), encoding="utf-8")
     (temp_dir / "backup_info.json").write_text(json.dumps({"backup_date": datetime.utcnow().isoformat(), "app_name": "Smart Database", "counts": counts}, ensure_ascii=False, indent=2), encoding="utf-8")
-    if Path("smart_database.db").exists():
-        shutil.copy2("smart_database.db", temp_dir / "smart_database.db")
+    if DATABASE_PATH and DATABASE_PATH.exists():
+        shutil.copy2(DATABASE_PATH, temp_dir / "smart_database.db")
     with zipfile.ZipFile(backup_path, "w", zipfile.ZIP_DEFLATED) as archive:
         for path in temp_dir.rglob("*"):
             archive.write(path, path.relative_to(temp_dir))

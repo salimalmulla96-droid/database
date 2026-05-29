@@ -36,10 +36,13 @@ from .models import (
 )
 
 
-UPLOAD_DIR = Path("static/uploads")
+BASE_DIR = Path(__file__).resolve().parent.parent
+STATIC_DIR = BASE_DIR / "static"
+TEMPLATES_DIR = BASE_DIR / "templates"
+UPLOAD_DIR = STATIC_DIR / "uploads"
 SOURCE_UPLOAD_DIR = UPLOAD_DIR / "sources"
-EXPORT_DIR = Path("exports")
-BACKUP_DIR = Path("backups")
+EXPORT_DIR = BASE_DIR / "exports"
+BACKUP_DIR = BASE_DIR / "backups"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 SOURCE_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 EXPORT_DIR.mkdir(parents=True, exist_ok=True)
@@ -48,9 +51,14 @@ BACKUP_DIR.mkdir(parents=True, exist_ok=True)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Smart Database")
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 templates.env.cache = None
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
 PERSON_GENDERS = ["Male", "Female", "Unknown"]
 NATIONALITIES = [

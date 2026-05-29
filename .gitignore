@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+
+smart_database.db
+*.db
+
+backups/
+exports/
+static/uploads/
+static/uploads/sources/
+
+.env
+.env.local
+.DS_Store
